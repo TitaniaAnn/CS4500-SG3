@@ -356,7 +356,8 @@ mainWindow = Tk()
 mainWindow.title("SG3")
 mainWindow.geometry("250x300")
 
-
+# Info Window: Opens with Main Menu
+# User can NOT use Main Menu until "Ok" is clicked on Info Window
 def Info_Window():
     startText = "This app reads text files, stores each file into a wordlist, displays a summary table, shows how many times a specific, searched word appears, and builds a concordance listing each word’s locations across all files."
     
