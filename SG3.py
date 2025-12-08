@@ -356,6 +356,18 @@ mainWindow = Tk()
 mainWindow.title("SG3")
 mainWindow.geometry("250x300")
 
+
+def Info_Window():
+    startText = "This app reads text files, stores each file into a wordlist, displays a summary table, shows how many times a specific, searched word appears, and builds a concordance listing each word’s locations across all files."
+    
+    infoWin = Toplevel(mainWindow)
+    infoWin.title("SG3: Info")
+    Label(infoWin, text=startText, wraplength=500).pack(padx = 20, pady = 20)
+    Button(infoWin, text = "Ok", command = infoWin.destroy, height = 1, width = 10).pack(pady = 10)
+    infoWin.transient(mainWindow)
+    infoWin.grab_set()
+    mainWindow.wait_window(infoWin)
+
 # Opens a new window to open a file
 def OpenFile_Window():
     fileName = StringVar()
@@ -411,5 +423,8 @@ b2.pack(pady = 5)
 b3.pack(pady = 5)
 b4.pack(pady = 5)
 b5.pack(pady = 5)
+
+Info_Window()
+mainWindow.deiconify()
 
 mainWindow.mainloop()
