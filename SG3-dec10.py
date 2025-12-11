@@ -9,6 +9,7 @@ SG3
 from tkinter import *
 from tkinter.messagebox import showinfo
 from tkinter import messagebox
+from tkinter import ttk
 from os import path
 from collections import defaultdict
 from pathlib import Path
@@ -348,7 +349,7 @@ def build_ExtraLists(concordance, total_Files):
 
 # SG3: GUI
 # Variables
-hist_word = []
+hist_word = {}
 hist_count = []
 all_wordlists = {} #This List stores all File lists.
 
@@ -418,36 +419,71 @@ def MessageUser(message):
 # 2. Opens a new window to search for words
 def SearchWords_Window():
     wordText = StringVar()
+
     wordWin = Toplevel(mainWindow)
-    wordWin.geometry("250x125")
+    wordWin.geometry("540x210")
     wordWin.title("Search For Words")
-    Label(wordWin, text = "Enter a word:").pack(padx = 5, pady = 5)
-    entry = Entry(wordWin, width = 30, textvariable = wordText)
+
+
+    frame1 = Frame(wordWin, width=150)
+    frame1.pack(padx=10, pady=10,side=LEFT, fill=BOTH, expand=False)
+
+
+
+    Label(frame1, text = "Enter a word:").pack(padx = 5, pady = 5)
+    entry = Entry(frame1, width = 30, textvariable = wordText)
     entry.pack(pady = 5)
-    submit_btn = Button(wordWin, text = "Submit", command = lambda:wordInfo(getSearchWord(entry)), height = 1, width = 10)
+
+    submit_btn = Button(frame1, text = "Submit", command = lambda:wordInfo(getSearchWord(entry), tree), height = 1, width = 10)
     submit_btn.pack(pady = 10)
-    cancel_btn = Button(wordWin, text="Cancel", command=wordWin.destroy, height=1, width=10)
+    cancel_btn = Button(frame1, text="Cancel", command=wordWin.destroy, height=1, width=10)
+    cancel_btn.pack(pady=10)
+
     wordWin.bind('<Return>', lambda event: submit_btn.invoke())
+
+    nested_frame2 = Frame(wordWin, width=350)
+    nested_frame2.pack(padx=10, pady=10, side=TOP, fill=BOTH, expand=True)
+
+    columns = ('word', 'file', 'number')
+    tree = ttk.Treeview(nested_frame2, columns=columns, show='headings')
+    tree.heading('word', text='Word')
+    tree.heading('file', text='FileName')
+    tree.heading('number', text='Count')
+
+    for ws in hist_word:
+        tree.insert('', 'end', values=(ws.key(),"",""))
+        for wi in ws.items:
+            tree.insert('','end',values=("",wi[0], wi[1]))
+    
+    tree.pack(pady=10, padx=10)
     wordWin.mainloop()
 
 # 2. Get Info on search word
-def wordInfo(word):
+def wordInfo(word, tree):
     # Check if any files are open
     if not all_wordlists:
         messagebox.showerror('Error', "No files to search.")
         return
     
-    wordPrint = ""
-    for key, value in all_wordlists.items():
-        count = sum(v == word for v in value)
-        wordPrint += f"{key}: {count}\n"
-
-    if wordPrint:
-        messagebox.showinfo('Word Info', wordPrint)
+    if word in hist_word:
+        messagebox.showerror('Error', "Word already searched.")
         return
     else:
-        messagebox.showinfo('Not Found', f"{word} is not found")
-        return
+        hist_word[word] = {}
+        wordPrint = ""
+        tree.insert('', 'end', values=(word,"",""))
+        for key, value in all_wordlists.items():
+            count = sum(v == word for v in value)
+            hist_word[word] = {key, count}
+            wordPrint += f"{key}: {count}\n"
+            tree.insert('','end',values=("",key, count))
+
+        if wordPrint:
+            # messagebox.showinfo('Word Info', wordPrint)
+            return
+        else:
+            messagebox.showinfo('Not Found', f"{word} is not found")
+            return
 
 # The close window part was annoying.
 # 4. This would opens a dialog listing all currently loaded files and lets the user close one.
