@@ -8,6 +8,7 @@ SG3
 
 from tkinter import *
 from tkinter.messagebox import showinfo
+from tkinter import messagebox
 from os import path
 from collections import defaultdict
 from pathlib import Path
@@ -71,8 +72,9 @@ def remove_punctuation(text):
 
 #Get Content from file and make into wordlist
 # Modified for SG3
-def getContent(filename): 
+def getContent(entry_widget): 
     wordlist = []
+    filename = entry_widget.get()
     try:
         if filename in all_wordlists:
             MessageUser(f"Error: file '{filename}' has already been added!")
@@ -86,11 +88,12 @@ def getContent(filename):
             print(all_wordlists) # FLAG: Delete
             ToggleButtonsOn()
             MessageUser("File added successfully!")
+            entry_widget.delete(0, END).delete(0, END)
     except FileNotFoundError:
         print(f"Error: file '{filename}' not found.")
         MessageUser(f"Error: file '{filename}' not found.")
 
-def getSearchWord():
+def getSearchWord(entry_widget):
     endFunction = False # if true the function ends
     LegalCharacters = 'abcdefghijklmnopqrstuvwxyz-'
     searchWord = ""
@@ -381,21 +384,39 @@ def Info_Window():
     infoWin = Toplevel(mainWindow)
     infoWin.title("SG3: Info")
     Label(infoWin, text=startText, wraplength=500).pack(padx = 20, pady = 20)
-    Button(infoWin, text = "Ok", command = infoWin.destroy, height = 1, width = 10).pack(pady = 10)
+    init_button = Button(infoWin, text = "Ok", command = infoWin.destroy, height = 1, width = 10)
+    init_button.pack(pady = 10)
+    infoWin.bind('<Return>', lambda event: init_button.invoke())
     infoWin.transient(mainWindow)
     infoWin.grab_set()
     mainWindow.wait_window(infoWin)
 
+def FileName_Validation(entry):
+    filename = entry.get()
+    if filename.strip().lower().endswith(".txt"):
+        getContent(entry)
+    else:
+        messagebox.showerror("Invalid Input", "File name must end with '.txt'.")
+        # Prevent further submission actions by simply returning
+        return
+
 # Opens a new window to open a file
 def OpenFile_Window():
     fileName = StringVar()
-    
+    #fileName.trace("w", validate_filename) # Call validate_filename when the variable is written to
+
     openWin = Toplevel(mainWindow)
     openWin.geometry("250x125")
     openWin.title("Open A File")
+    openWin.attributes('-topmost', True)
     Label(openWin, text = "Enter file name, including .txt: ").pack(padx = 5, pady = 5)
-    Entry(openWin, width = 30, textvariable = fileName).pack(pady = 5)
-    Button(openWin, text = "Submit", command = lambda:getContent(fileName.get()), height = 1, width = 10).pack(pady = 10)
+
+    entry = Entry(openWin, width = 30, textvariable = fileName) #, validate="focusout", validatecommand=(vcmd, '%P'))
+    entry.pack(pady = 5)
+    submit_button = Button(openWin, text = "Submit", command = lambda:FileName_Validation(entry), height = 1, width = 10)
+    submit_button.pack(pady = 10)
+    openWin.bind('<Return>', lambda event: submit_button.invoke())
+    openWin.mainloop()
 
 # Toggles buttons 2, 3, and 4 on the main menu window
 # Use in OpenFile_Window with OpenFile
@@ -413,6 +434,8 @@ def ToggleButtonsOff():
 
 #The close window part was annoying.
 #This  would opens a dialog listing all currently loaded files and lets the user close one.
+# Cynthia Brown: Just want to go on the record that this is not a secure way to handle files.
+# Files should be closed immediately after you have loaded them into the program.
 def CloseFile_Window():
     if not all_wordlists:
         MessageUser("No files to close.")
@@ -458,6 +481,13 @@ def SearchWords_Window():
     wordWin = Toplevel(mainWindow)
     wordWin.geometry("250x125")
     wordWin.title("Search For Words")
+    Label(wordWin, text = "Enter a word:").pack(padx = 5, pady = 5)
+    entry_widget = Entry(wordWin, width = 30, textvariable = wordText)
+    entry_widget.pack(pady = 5)
+    my_button = Button(wordWin, text = "Submit", command = lambda:(entry_widget), height = 1, width = 10)
+    my_button.pack(pady = 10)
+    wordWin.bind('<Return>', lambda event: my_button.invoke())
+    wordWin.mainloop()
 
 ## Main Menu
 '''
@@ -465,6 +495,7 @@ Buttons 2, 3, and 4 are set to DISABLED until a file is opened
 '''
 b1 = Button(mainWindow, text = "1. Open A File", command = OpenFile_Window, height = 2, width = 25)
 b2 = Button(mainWindow, text = "2. Search For Words", height = 2, width = 25, state = DISABLED)
+b2.config(command=SearchWords_Window)
 b3 = Button(mainWindow, text = "3. Build Concordance", height = 2, width = 25, state = DISABLED)
 b3.config(command=BuildConcordance_Window) #Adding this to connected with the concordance button
 b4 = Button(mainWindow, text = "4. Close File", height = 2, width = 25, state = DISABLED)
@@ -473,11 +504,17 @@ b5 = Button(mainWindow, text = "5. Exit", height = 2, width = 25)
 b5.config(command=ExitProgram) #Connected to the exit program button
 
 # Pack displays the buttons
+# Added key bindings to 1-5
 b1.pack(pady = 5)
+mainWindow.bind("1", lambda event: b1.invoke())
 b2.pack(pady = 5)
+mainWindow.bind("2", lambda event: b2.invoke())
 b3.pack(pady = 5)
+mainWindow.bind("3", lambda event: b3.invoke())
 b4.pack(pady = 5)
+mainWindow.bind("4", lambda event: b4.invoke())
 b5.pack(pady = 5)
+mainWindow.bind("5", lambda event: b5.invoke())
 
 Info_Window()
 mainWindow.deiconify()
