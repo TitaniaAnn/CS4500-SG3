@@ -18,11 +18,11 @@ import re
 
 # SG2 Methods
 #constant
-file_extension = "txt" 
+file_ext = ".txt" 
 #Prompt User what this program does, return nothing.
-def promptUser(): 
-    print("This app reads up to 10 text files, stores each file into a wordlist, displays a summary table, shows how many times a specific word appears, and builds a concordance listing each word’s locations across all files.") 
-    return 0 
+# def promptUser(): 
+#    print("This app reads up to 10 text files, stores each file into a wordlist, displays a summary table, shows how many times a specific word appears, and builds a concordance listing each word’s locations across all files.") 
+#    return 0 
  
 #Prompt user to enter filename, takes in x as parameter, and returns nothing when succesful
 """ Take in filename, check if it has .txt on end and if it exists in filepath and then return boolean. 
@@ -33,7 +33,7 @@ def getFile(temp):
         filename = input("Please Enter a filename, you can enter up to 10 a filenames(All must be within the same folder as the app):").strip() # Added strip to eliminate any spaces before and after the filename
        
         # Check if filename ends with .txt (case-insensitive)
-        if filename.lower().endswith(".txt"):
+        if filename.lower().endswith(file_ext):
             file = Path(filename).resolve()
             if not file.exists():
                 print("File does not exist. Please try again.")
@@ -50,34 +50,34 @@ def getFile(temp):
                 print("Invalid file type. Must be a text (*.txt) file.")
 
 #Get continuancy boolean value from if user wants to continue entering files.
-def getContinuancy(z):
-    #con = continue variable
-    con = input("Would you like to continue entering Files? Please enter Yes or No:").strip().lower()
-    if con == "yes" or con == "y":
-        z = True
-    elif con == "no" or con == "n":
-        z = False
-    else:
-        print("That answer is not valid, please try again")
-        #Recursively call the definition again and return its value
-        return getContinuancy(z)
-    return z
+#def getContinuancy(z):
+#    #con = continue variable
+#    con = input("Would you like to continue entering Files? Please enter Yes or No:").strip().lower()
+#    if con == "yes" or con == "y":
+#        z = True
+#    elif con == "no" or con == "n":
+#        z = False
+#    else:
+#        print("That answer is not valid, please try again")
+#        #Recursively call the definition again and return its value
+#        return getContinuancy(z)
+#    return z
     
-#Clean text
+# 1. Clean text
 def remove_punctuation(text):
     # Finds and removes all punctuation from the string
     # pattern = r'[^\w\s-]|(?<!\w)-(?!\w)|(?<!\w)-(?!\r)|(?<!\w)-(?!\n)'
     pattern = r'[^\w\s-]|(?<!\w)-(?!\w)'
     return re.sub(pattern, '', text).replace('\r', '').replace('\n', '')
 
-#Get Content from file and make into wordlist
+# 1. Get Content from file and make into wordlist
 # Modified for SG3
-def getContent(entry_widget): 
+def getContent(entry): 
     wordlist = []
-    filename = entry_widget.get()
+    filename = entry.get()
     try:
         if filename in all_wordlists:
-            MessageUser(f"Error: file '{filename}' has already been added!")
+            messagebox.showerror('Error', f"Error: file '{filename}' has already been added!")
             return
         with open(filename, 'r', encoding="utf-8") as f: 
             content = f.read()
@@ -87,44 +87,25 @@ def getContent(entry_widget):
             all_wordlists[filename] = wordlist
             print(all_wordlists) # FLAG: Delete
             ToggleButtonsOn()
-            MessageUser("File added successfully!")
-            entry_widget.delete(0, END).delete(0, END)
+            messagebox.showinfo('Success', "File added successfully!")
+            entry.delete(0, END).delete(0, END)
     except FileNotFoundError:
-        print(f"Error: file '{filename}' not found.")
-        MessageUser(f"Error: file '{filename}' not found.")
+        messagebox.showerror('Error', f"Error: file '{filename}' not found.")
 
-def getSearchWord(entry_widget):
-    endFunction = False # if true the function ends
-    LegalCharacters = 'abcdefghijklmnopqrstuvwxyz-'
-    searchWord = ""
-    while endFunction == False:
-        answer = input("Enter a Word to search for \n(must be all alphabet or a - with no space in between 2 words): ")
-        if len(answer) > 0:
-            # Check Word
-            valid = True
-            for char in answer: # check each character
-                if LegalCharacters.find(char.lower()) > -1:
-                    if char == "-":
-                        cindex = answer.find("-")
-                        if (cindex > 0 and cindex < (len(answer)-1)):
-                            continue
-                        else:
-                            endFunction = False
-                            break
-                    else:
-                        valid = True
-                        
-                if valid == True:
-                    searchWord = answer
-                    endFunction = True
-                else:
-                    print("Word is invalid")
-                    print("word must only contain letters \n(or a hyphen in between the words with no space)")
-                    endFunction = False
-        else:
-            print("Please enter a word to search")
-            endFunction = False
-    return searchWord
+
+# 2. Validate entry
+def getSearchWord(entry):
+    LegalChars = r"^[a-zA-Z-]+$"
+    searchWord = entry.get()
+
+    # Check length of word and that it is valid
+    if len(searchWord) > 0 and re.match(LegalChars, searchWord):
+        return searchWord.lower()
+    else:
+        # if entry is invalid show error box and return to entry window
+        messagebox.showerror('Error', "Word is invalid. \nWord must contain only letters and hyphen. \nPlease enter a word to search")
+        return
+    
 
 def countOccurrences(wordList, searchWord):
     count = 0     
@@ -287,19 +268,19 @@ def read_Extra_Lists(filename="ExtraLists.txt"):
 # GUI version of Build Concordance functionality
 def BuildConcordance_Window():
     if not all_wordlists:
-        MessageUser("No files loaded to process.")
+        messagebox.showerror('Error', "No files loaded to process.")
         return
 
     # Optional: include ignore/highlight lists if you use them
     ignore_Words, highlight_Words = read_Extra_Lists()
 
-    MessageUser("Building concordance... please wait.")
+    messagebox.showinfo('Working', "Building concordance... please wait.")
     concordance = build_Concordance(all_wordlists, ignore_Words)
     create_Concordance(concordance, highlight_Words)
 
     # Automatically build ExtraLists after concordance
     build_ExtraLists(concordance, len(all_wordlists))
-    MessageUser("Concordance and ExtraLists successfully generated!")
+    messagebox.showinfo('Success', "Concordance and ExtraLists successfully generated!")
 
                   
 def build_ExtraLists(concordance, total_Files):
@@ -376,7 +357,8 @@ mainWindow = Tk()
 mainWindow.title("SG3")
 mainWindow.geometry("250x300")
 
-# Info Window: Opens with Main Menu
+
+# 0. Info Window: Opens with Main Menu
 # User can NOT use Main Menu until "Ok" is clicked on Info Window
 def Info_Window():
     startText = "This app reads text files, stores each file into a wordlist, displays a summary table, shows how many times a specific, searched word appears, and builds a concordance listing each word’s locations across all files."
@@ -390,17 +372,9 @@ def Info_Window():
     infoWin.transient(mainWindow)
     infoWin.grab_set()
     mainWindow.wait_window(infoWin)
+    
 
-def FileName_Validation(entry):
-    filename = entry.get()
-    if filename.strip().lower().endswith(".txt"):
-        getContent(entry)
-    else:
-        messagebox.showerror("Invalid Input", "File name must end with '.txt'.")
-        # Prevent further submission actions by simply returning
-        return
-
-# Opens a new window to open a file
+# 1. Opens a new window to open a file
 def OpenFile_Window():
     fileName = StringVar()
     #fileName.trace("w", validate_filename) # Call validate_filename when the variable is written to
@@ -418,105 +392,147 @@ def OpenFile_Window():
     openWin.bind('<Return>', lambda event: submit_button.invoke())
     openWin.mainloop()
 
-# Toggles buttons 2, 3, and 4 on the main menu window
+# 1. Validate Filename
+def FileName_Validation(entry):
+    filename = entry.get()
+    if filename.strip().lower().endswith(".txt"):
+        getContent(entry)
+    else:
+        messagebox.showerror("Invalid Input", "File name must end with '.txt'.")
+        # Prevent further submission actions by simply returning
+        return
+    
+# 1. Toggles buttons 2, 3, and 4 on the main menu window
 # Use in OpenFile_Window with OpenFile
 def ToggleButtonsOn():
     b2.config(state=NORMAL)
     b3.config(state=NORMAL)
     b4.config(state=NORMAL)
-    
-# Toggles buttons 2, 3, and 4 off on the main menu window
-# Use when last file has been closed
-def ToggleButtonsOff():
-    b2.config(state=DISABLED)
-    b3.config(state=DISABLED)
-    b4.config(state=DISABLED)
 
-#The close window part was annoying.
-#This  would opens a dialog listing all currently loaded files and lets the user close one.
-# Cynthia Brown: Just want to go on the record that this is not a secure way to handle files.
-# Files should be closed immediately after you have loaded them into the program.
-def CloseFile_Window():
-    if not all_wordlists:
-        MessageUser("No files to close.")
-        return
-
-    closeWin = Toplevel(mainWindow)
-    closeWin.title("Close a File")
-    closeWin.geometry("275x175")
-
-    Label(closeWin, text="Select a file to close:").pack(pady=5)
-    file_list = Listbox(closeWin, width=35, height=6, selectmode=SINGLE)
-    for f in all_wordlists.keys():
-        file_list.insert(END, f)
-    file_list.pack(pady=5)
-
-    def remove_selected():
-        selection = file_list.curselection()
-        if not selection:
-            MessageUser("Please select a file to close.")
-            return
-        filename = file_list.get(selection[0])
-        del all_wordlists[filename]
-        MessageUser(f"File '{filename}' has been closed.")
-        if not all_wordlists:
-            ToggleButtonsOff()
-        closeWin.destroy()
-#When the last file is closed, it disables buttons 2,3 and 4
-    Button(closeWin, text="Close File", command=remove_selected).pack(pady=10)
 
 # Function to display a message to a user
 # Used in OpenFile_Window
 def MessageUser(message):
     showinfo("Message", message)
 
-#A function to exit to end the main loop
-def ExitProgram():
-    MessageUser("Exiting program.")
-    mainWindow.destroy()
-
-# Opens a new window to search for words
-# TODO: 
+# 2. Opens a new window to search for words
 def SearchWords_Window():
+    wordText = StringVar()
     wordWin = Toplevel(mainWindow)
     wordWin.geometry("250x125")
     wordWin.title("Search For Words")
     Label(wordWin, text = "Enter a word:").pack(padx = 5, pady = 5)
-    entry_widget = Entry(wordWin, width = 30, textvariable = wordText)
-    entry_widget.pack(pady = 5)
-    my_button = Button(wordWin, text = "Submit", command = lambda:(entry_widget), height = 1, width = 10)
-    my_button.pack(pady = 10)
-    wordWin.bind('<Return>', lambda event: my_button.invoke())
+    entry = Entry(wordWin, width = 30, textvariable = wordText)
+    entry.pack(pady = 5)
+    submit_btn = Button(wordWin, text = "Submit", command = lambda:wordInfo(getSearchWord(entry)), height = 1, width = 10)
+    submit_btn.pack(pady = 10)
+    cancel_btn = Button(wordWin, text="Cancel", command=wordWin.destroy, height=1, width=10)
+    wordWin.bind('<Return>', lambda event: submit_btn.invoke())
     wordWin.mainloop()
+
+# 2. Get Info on search word
+def wordInfo(word):
+    # Check if any files are open
+    if not all_wordlists:
+        messagebox.showerror('Error', "No files to search.")
+        return
+    
+    wordPrint = ""
+    for key, value in all_wordlists.items():
+        count = sum(v == word for v in value)
+        wordPrint += f"{key}: {count}\n"
+
+    if wordPrint:
+        messagebox.showinfo('Word Info', wordPrint)
+        return
+    else:
+        messagebox.showinfo('Not Found', f"{word} is not found")
+        return
+
+# The close window part was annoying.
+# 4. This would opens a dialog listing all currently loaded files and lets the user close one.
+def CloseFile_Window():
+    # Check if any files are open
+    if not all_wordlists:
+        messagebox.showerror('Error', "No files to close.")
+        return
+
+    # Build display window
+    closeWin = Toplevel(mainWindow)
+    closeWin.title("Close a File")
+    closeWin.geometry("275x175")
+
+    # Window content
+    Label(closeWin, text="Select a file to close:").pack(pady=5)
+    file_list = Listbox(closeWin, width=35, height=6, selectmode=SINGLE)
+    for f in all_wordlists.keys():
+        file_list.insert(END, f)
+    file_list.pack(pady=5)
+
+    # Remove file function
+    def remove_selected():
+        selection = file_list.curselection()
+        if not selection:
+            messagebox.showinfo('', "Please select a file to close.")
+            return
+        filename = file_list.get(selection[0])
+        del all_wordlists[filename]
+        messagebox.showinfo('Success', f"File '{filename}' has been closed.")
+        if not all_wordlists:
+            ToggleButtonsOff()
+        closeWin.destroy()
+
+    # When the last file is closed, it disables buttons 2,3 and 4
+    Button(closeWin, text="Close File", command=remove_selected).pack(pady=10)
+
+
+# 4. Toggles buttons 2, 3, and 4 off on the main menu window
+# Use when last file has been closed
+def ToggleButtonsOff():
+    b2.config(state=DISABLED)
+    b3.config(state=DISABLED)
+    b4.config(state=DISABLED)
+
+
+# 5. A function to exit to end the main loop
+def ExitProgram():
+    messagebox.showinfo('Info', "Exiting program.")
+    mainWindow.destroy()
+
 
 ## Main Menu
 '''
 Buttons 2, 3, and 4 are set to DISABLED until a file is opened
+Pack displays the buttons
+Added key bindings to 1-5
 '''
+# Open File Button
 b1 = Button(mainWindow, text = "1. Open A File", command = OpenFile_Window, height = 2, width = 25)
-b2 = Button(mainWindow, text = "2. Search For Words", height = 2, width = 25, state = DISABLED)
-b2.config(command=SearchWords_Window)
-b3 = Button(mainWindow, text = "3. Build Concordance", height = 2, width = 25, state = DISABLED)
-b3.config(command=BuildConcordance_Window) #Adding this to connected with the concordance button
-b4 = Button(mainWindow, text = "4. Close File", height = 2, width = 25, state = DISABLED)
-b4.config(command=CloseFile_Window) #Connected to the close file button
-b5 = Button(mainWindow, text = "5. Exit", height = 2, width = 25)
-b5.config(command=ExitProgram) #Connected to the exit program button
-
-# Pack displays the buttons
-# Added key bindings to 1-5
 b1.pack(pady = 5)
 mainWindow.bind("1", lambda event: b1.invoke())
+
+# Word Search Button
+b2 = Button(mainWindow, text = "2. Search For Words", command=SearchWords_Window, height = 2, width = 25, state = DISABLED)
 b2.pack(pady = 5)
 mainWindow.bind("2", lambda event: b2.invoke())
+
+# Build Concordence Button
+b3 = Button(mainWindow, text = "3. Build Concordance", command=BuildConcordance_Window, height = 2, width = 25, state = DISABLED)
 b3.pack(pady = 5)
 mainWindow.bind("3", lambda event: b3.invoke())
+
+# Close File Button
+b4 = Button(mainWindow, text = "4. Close File", command=CloseFile_Window, height = 2, width = 25, state = DISABLED)
 b4.pack(pady = 5)
 mainWindow.bind("4", lambda event: b4.invoke())
+
+# Exit Button
+b5 = Button(mainWindow, text = "5. Exit", command=ExitProgram, height = 2, width = 25)
 b5.pack(pady = 5)
 mainWindow.bind("5", lambda event: b5.invoke())
 
+
+# Display Info Window on Start of Program
 Info_Window()
 mainWindow.deiconify()
-
 mainWindow.mainloop()
