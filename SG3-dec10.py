@@ -98,6 +98,7 @@ def getContent(entry):
 def getSearchWord(entry):
     LegalChars = r"^[a-zA-Z-]+$"
     searchWord = entry.get()
+    entry.delete(0, END)
 
     # Check length of word and that it is valid
     if len(searchWord) > 0 and re.match(LegalChars, searchWord):
@@ -378,10 +379,11 @@ def Info_Window():
 # 1. Opens a new window to open a file
 def OpenFile_Window():
     fileName = StringVar()
-    #fileName.trace("w", validate_filename) # Call validate_filename when the variable is written to
+    main_x_pos = mainWindow.winfo_rootx()
+    main_y_pos = mainWindow.winfo_rooty()
 
     openWin = Toplevel(mainWindow)
-    openWin.geometry("250x125")
+    openWin.geometry(f"250x125+{main_x_pos}+{main_y_pos}")
     openWin.title("Open A File")
     openWin.attributes('-topmost', True)
     Label(openWin, text = "Enter file name, including .txt: ").pack(padx = 5, pady = 5)
@@ -390,6 +392,8 @@ def OpenFile_Window():
     entry.pack(pady = 5)
     submit_button = Button(openWin, text = "Submit", command = lambda:FileName_Validation(entry), height = 1, width = 10)
     submit_button.pack(pady = 10)
+    cancel_btn = Button(openWin, text="Cancel", command=openWin.destroy, height=1, width=10)
+    cancel_btn.pack(pady=10)
     openWin.bind('<Return>', lambda event: submit_button.invoke())
     openWin.mainloop()
 
@@ -411,21 +415,18 @@ def ToggleButtonsOn():
     b4.config(state=NORMAL)
 
 
-# Function to display a message to a user
-# Used in OpenFile_Window
-def MessageUser(message):
-    showinfo("Message", message)
-
 # 2. Opens a new window to search for words
 def SearchWords_Window():
     wordText = StringVar()
+    main_x_pos = mainWindow.winfo_rootx()
+    main_y_pos = mainWindow.winfo_rooty()
 
     wordWin = Toplevel(mainWindow)
-    wordWin.geometry("540x210")
+    wordWin.geometry(f"840x210+{main_x_pos}+{main_y_pos}")
     wordWin.title("Search For Words")
 
 
-    frame1 = Frame(wordWin, width=150)
+    frame1 = Frame(wordWin, width=200)
     frame1.pack(padx=10, pady=10,side=LEFT, fill=BOTH, expand=False)
 
 
@@ -441,7 +442,7 @@ def SearchWords_Window():
 
     wordWin.bind('<Return>', lambda event: submit_btn.invoke())
 
-    nested_frame2 = Frame(wordWin, width=350)
+    nested_frame2 = Frame(wordWin, width=600)
     nested_frame2.pack(padx=10, pady=10, side=TOP, fill=BOTH, expand=True)
 
     columns = ('word', 'file', 'number')
@@ -474,9 +475,10 @@ def wordInfo(word, tree):
         tree.insert('', 'end', values=(word,"",""))
         for key, value in all_wordlists.items():
             count = sum(v == word for v in value)
-            hist_word[word] = {key, count}
-            wordPrint += f"{key}: {count}\n"
-            tree.insert('','end',values=("",key, count))
+            if count > 0:
+                hist_word[word] = {key, count}
+                wordPrint += f"{key}: {count}\n"
+                tree.insert('','end',values=("",key, count))
 
         if wordPrint:
             # messagebox.showinfo('Word Info', wordPrint)
@@ -493,10 +495,13 @@ def CloseFile_Window():
         messagebox.showerror('Error', "No files to close.")
         return
 
+    main_x_pos = mainWindow.winfo_rootx()
+    main_y_pos = mainWindow.winfo_rooty()
+
     # Build display window
     closeWin = Toplevel(mainWindow)
     closeWin.title("Close a File")
-    closeWin.geometry("275x175")
+    closeWin.geometry(f"275x275+{main_x_pos}+{main_y_pos}")
 
     # Window content
     Label(closeWin, text="Select a file to close:").pack(pady=5)
@@ -520,6 +525,8 @@ def CloseFile_Window():
 
     # When the last file is closed, it disables buttons 2,3 and 4
     Button(closeWin, text="Close File", command=remove_selected).pack(pady=10)
+    cancel_btn = Button(closeWin, text="Cancel", command=closeWin.destroy, height=1, width=10)
+    cancel_btn.pack(pady=10)
 
 
 # 4. Toggles buttons 2, 3, and 4 off on the main menu window
