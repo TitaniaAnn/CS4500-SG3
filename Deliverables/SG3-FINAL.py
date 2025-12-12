@@ -94,7 +94,7 @@ def getContent(entry):
             wordlist = content.split()
         if len(wordlist) > 0:
             all_wordlists[filename] = wordlist
-            print(all_wordlists) # FLAG: Delete
+            #print(all_wordlists) # FLAG: Delete
             ToggleButtonsOn()
             messagebox.showinfo('Success', "File added successfully!")
             entry.delete(0, END)
