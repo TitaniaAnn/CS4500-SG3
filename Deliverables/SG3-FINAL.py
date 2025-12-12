@@ -484,7 +484,7 @@ def wordInfo(word, tree):
         for key, value in all_wordlists.items():
             count = sum(v == word for v in value)
             if count > 0:
-                hist_word[word] = {key: count}
+                hist_word[word].update({key: count})
                 wordPrint += f"{key}: {count}\n"
                 tree.insert('','end',values=("",key, count))
 
