@@ -4,6 +4,11 @@
 Created using Thonny and Visual Studio Code
 
 SG3
+Written by: Tyler Bell, Cynthia Brown, Zack Hill, Ethan Hillebrand, and Amanda Hoosech
+Date: 12/10/2025
+Description: This program reads up to 10 text files, stores each text file into a wordlist,
+allows users to search for words found in the opened text files, builds a concordance and extra lists based off of
+the opened files, and allows users to close files to exclude from use in search/concordance functions.
 '''
 
 from tkinter import *
@@ -77,6 +82,9 @@ def getContent(entry):
     wordlist = []
     filename = entry.get()
     try:
+        if len(all_wordlists) == 10:
+            messagebox.showerror('Error', "Error: Maximum files opened. Plese close a file before opening a new one.")
+            return
         if filename in all_wordlists:
             messagebox.showerror('Error', f"Error: file '{filename}' has already been added!")
             return
@@ -89,7 +97,7 @@ def getContent(entry):
             print(all_wordlists) # FLAG: Delete
             ToggleButtonsOn()
             messagebox.showinfo('Success', "File added successfully!")
-            entry.delete(0, END).delete(0, END)
+            entry.delete(0, END)
     except FileNotFoundError:
         messagebox.showerror('Error', f"Error: file '{filename}' not found.")
 
@@ -430,7 +438,6 @@ def SearchWords_Window():
     frame1.pack(padx=10, pady=10,side=LEFT, fill=BOTH, expand=False)
 
 
-
     Label(frame1, text = "Enter a word:").pack(padx = 5, pady = 5)
     entry = Entry(frame1, width = 30, textvariable = wordText)
     entry.pack(pady = 5)
@@ -450,13 +457,14 @@ def SearchWords_Window():
     tree.heading('word', text='Word')
     tree.heading('file', text='FileName')
     tree.heading('number', text='Count')
-
-    for ws in hist_word:
-        tree.insert('', 'end', values=(ws.key(),"",""))
-        for wi in ws.items:
-            tree.insert('','end',values=("",wi[0], wi[1]))
-    
     tree.pack(pady=10, padx=10)
+
+    for key_word, value_list in hist_word.items():
+        tree.insert('', 'end', values=(key_word,"",""))
+        for child_text, child_count in value_list.items():
+            tree.insert('','end',values=("",child_text, child_count))
+    
+    
     wordWin.mainloop()
 
 # 2. Get Info on search word
@@ -476,7 +484,7 @@ def wordInfo(word, tree):
         for key, value in all_wordlists.items():
             count = sum(v == word for v in value)
             if count > 0:
-                hist_word[word] = {key, count}
+                hist_word[word] = {key: count}
                 wordPrint += f"{key}: {count}\n"
                 tree.insert('','end',values=("",key, count))
 
